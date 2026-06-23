@@ -1,6 +1,5 @@
 #include <threads.h>
 #include <stdlib.h>
-#include <time.h>
 #include "ickclock.h"
 #include "ickutils.h"
 static int ickwait(void* tar);

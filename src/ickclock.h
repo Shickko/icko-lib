@@ -1,3 +1,4 @@
+#include <time.h>
 #ifndef ICKLIB_H_ICKCLOCK
 #define ICKLIB_H_ICKCLOCK
 typedef enum {
@@ -16,6 +17,7 @@ ickclock_t* ickclock();
 int ickclock_smash(ickclock_t** tar);
 int ickclock_kill(ickclock_t* tar);
 int ickclock_boot(ickclock_t* tar);
+static int ickwait(void* tar);
 void ickclock_reset(ickclock_t* tar);
 time_t ickclock_getcurr(const ickclock_t* tar);
 time_t ickclock_getcend(const ickclock_t* tar);
