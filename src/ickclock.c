@@ -1,5 +1,6 @@
 #include <threads.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "ickclock.h"
 #include "ickutils.h"
 static int ickwait(void* tar);
@@ -31,17 +32,14 @@ int ickclock_smash(ickclock_t** tar) {
     return (ickclock_kill(this) == ICKSUCCESS) ?
             ickclock_smash(tar) : ICKERR;
   }
-  int exit_status = 0;
-  thrd_join(this -> clock_thrd, &exit_status);
   mtx_destroy(&(this -> mlock));
   free(this); 
-  *tar = NULL;
   return ICKSUCCESS;
 }
 int ickclock_kill(ickclock_t* tar) {
   tar -> clock_stat = TC_TERMINATE;
   if (thrd_detach(tar -> clock_thrd) == thrd_success)
-  { return ICKSUCCESS; }
+  { tar -> clock_stat = TC_IDLE; return ICKSUCCESS; }
   return ICKERR;
 }
 int ickclock_boot(ickclock_t* tar) {
@@ -49,12 +47,15 @@ int ickclock_boot(ickclock_t* tar) {
       tar -> clen == 0) {
     return ICKERR;
   }
+  if (tar -> clock_stat == TC_JOB)
+  { return ICKERR; }
   mtx_lock(&(tar -> mlock));
   if (thrd_create(&(tar -> clock_thrd), ickwait, tar) != thrd_success)
   { return ICKERR; }
   int exit_status = 0;
   tar -> clock_stat = TC_JOB;
-  tar -> curr = time(0);
+  if (tar -> curr == 0) 
+  { tar -> curr = time(0); }
   mtx_unlock(&(tar -> mlock));
   if (tar -> clock_mode != TC_SEQ)
   { return ICKSUCCESS; }
@@ -72,7 +73,8 @@ static int ickwait(void* tar) {
       thrd_yield();
       mtx_lock(&(clock -> mlock));
       clock -> cend = time(0);
-      clock -> clen = clock -> cend - clock -> curr;
+      clock_len = clock -> cend - clock -> curr;
+      clock -> clen = clock_len;
       mtx_unlock(&(clock -> mlock));
     }
     return ICKSUCCESS;
