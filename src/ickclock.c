@@ -72,6 +72,9 @@ static int ickwait(void* tar) {
     {
       thrd_yield();
       mtx_lock(&(clock -> mlock));
+      thrd_sleep(&(struct timespec)
+          { .tv_sec = 0, .tv_nsec = 50 * 1000000 }, 
+          NULL);
       clock -> cend = time(0);
       clock_len = clock -> cend - clock -> curr;
       clock -> clen = clock_len;
@@ -80,7 +83,7 @@ static int ickwait(void* tar) {
     return ICKSUCCESS;
   }
   if (thrd_sleep(&(struct timespec) 
-     {.tv_sec = clock_len}, NULL
+     { .tv_sec = clock_len }, NULL
   ) != thrd_success )
   { return ICKERR; }
   mtx_lock(&(clock -> mlock));
