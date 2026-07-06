@@ -14,15 +14,16 @@ typedef enum {
 } ickclock_mode;
 typedef struct ickclock_t ickclock_t;
 ickclock_t* ickclock();
+ickclock_t* ickclock_read(const char* dir);
+int ickclock_write(ickclock_t* tar, const char* dir);
 int ickclock_smash(ickclock_t** tar);
 int ickclock_kill(ickclock_t* tar);
 int ickclock_boot(ickclock_t* tar);
-static int ickwait(void* tar);
 void ickclock_reset(ickclock_t* tar);
 time_t ickclock_getcurr(const ickclock_t* tar);
 time_t ickclock_getcend(const ickclock_t* tar);
 time_t ickclock_getclen(const ickclock_t* tar);
-void ickclock_setlen(ickclock_t* tar, int len);
+void ickclock_setclen(ickclock_t* tar, int len);
 void ickclock_setmode(ickclock_t* tar, ickclock_mode md);
 ickclock_stat ickclock_getstat(const ickclock_t* tar);
 ickclock_mode ickclock_getmode(const ickclock_t* tar);

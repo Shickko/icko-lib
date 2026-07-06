@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "ickclock.h"
 #include "ickutils.h"
-static int ickwait(void* tar);
+int ickwait(void* tar);
 struct ickclock_t {
   ickclock_stat clock_stat;
   ickclock_mode clock_mode;
@@ -25,6 +25,30 @@ ickclock_t* ickclock() {
   this -> clock_mode   = TC_THRD;
   return this;
 }
+ickclock_t* ickclock_read(const char* dir) {
+  ickclock_t* this = malloc(sizeof(ickclock_t));
+  FILE* fp = fopen(dir, "rb");
+  if (fp == NULL) { free(this); return NULL; }
+  fread(this, sizeof(ickclock_t), 1, fp);
+  fclose(fp);
+  if (mtx_init(&(this -> mlock), mtx_plain) == thrd_error)
+  { free(this); return NULL; }
+  return this;
+}
+int ickclock_write(ickclock_t* tar, const char* dir) {
+  int previous_stat = tar -> clock_stat;
+  if (previous_stat == TC_JOB) {
+    if (ickclock_kill(tar) == ICKERR)
+    { return ICKERR; }
+  }
+  FILE* fp = fopen(dir, "wb");
+  if (fp == NULL) { return ICKERR; }
+  fwrite(tar, sizeof(ickclock_t), 1, fp);
+  if (previous_stat == TC_JOB)
+  { fclose(fp); return ickclock_boot(tar); }
+  fclose(fp);
+  return ICKSUCCESS;
+}
 int ickclock_smash(ickclock_t** tar) {
   if (!tar || !(*tar)) { return ICKERR; }
   ickclock_t* this = *tar;
@@ -38,7 +62,7 @@ int ickclock_smash(ickclock_t** tar) {
 }
 int ickclock_kill(ickclock_t* tar) {
   tar -> clock_stat = TC_TERMINATE;
-  if (thrd_detach(tar -> clock_thrd) == thrd_success)
+  if (thrd_join(tar -> clock_thrd, NULL) == thrd_success)
   { tar -> clock_stat = TC_IDLE; return ICKSUCCESS; }
   return ICKERR;
 }
@@ -64,13 +88,12 @@ int ickclock_boot(ickclock_t* tar) {
   thrd_detach(tar -> clock_thrd);
   return ICKERR;
 }
-static int ickwait(void* tar) {
+int ickwait(void* tar) {
   ickclock_t* clock = tar;
   time_t clock_len = clock -> clen;
   if (clock -> clock_mode == TC_TICK) {
     while (clock -> clock_stat != TC_TERMINATE)
     {
-      thrd_yield();
       mtx_lock(&(clock -> mlock));
       thrd_sleep(&(struct timespec)
           { .tv_sec = 0, .tv_nsec = 50 * 1000000 }, 
@@ -107,7 +130,7 @@ time_t ickclock_getcend(const ickclock_t* tar)
 { return (tar -> cend); }
 time_t ickclock_getclen(const ickclock_t* tar)
 { return (tar -> clen); }
-void ickclock_setlen(ickclock_t* tar, int len)
+void ickclock_setclen(ickclock_t* tar, int len)
 { if (ickclock_getstat(tar) == TC_JOB) { return; } tar -> clen = len; }
 void ickclock_setmode(ickclock_t* tar, ickclock_mode md)
 { if (ickclock_getstat(tar) == TC_JOB) { return; } tar -> clock_mode = md; }

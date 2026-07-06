@@ -12,6 +12,7 @@ int getX(ickpoint_t* tar);
 int getY(ickpoint_t* tar);
 void setX(ickpoint_t* tar, int x);
 void setY(ickpoint_t* tar, int y);
+void setXY(ickpoint_t* tar, int x, int y);
 int ickbox_smash(ickbox_t** box);
 int ickbox_load(ickbox_t* box, void* tar);
 int ickbox_loadto(ickbox_t* box, void* tar, int pos);
