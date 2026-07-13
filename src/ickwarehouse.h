@@ -9,6 +9,7 @@ typedef void* cargo_t;
 ickbox_t* ickbox();
 int ickbox_smash(ickbox_t** box);
 int ickbox_getweight(const ickbox_t* box);
+int ickbox_getlength(const ickbox_t* box);
 int ickbox_load(ickbox_t* box, cargo_t tar);
 int ickbox_loadat(ickbox_t* box, cargo_t tar, int pos);
 cargo_t ickbox_check(ickbox_t* box, int pos);

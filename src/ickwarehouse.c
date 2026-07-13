@@ -14,6 +14,7 @@ struct ickbox_t {
   ickbox_t* boxlink;
   cargo_t cargo;
   int weight;
+  int length;
   int boxid;
 };
 
@@ -23,6 +24,7 @@ ickbox_t* ickbox() {
   this -> boxlink = NULL;
   this -> cargo = NULL;
   this -> weight = 0;
+  this -> length = 1;
   this -> boxid = 0;
   return this;
 }
@@ -50,6 +52,8 @@ int ickbox_smash(ickbox_t** box) {
 }
 int ickbox_getweight(const ickbox_t* box)
 { return box -> boxid == 0 ? box -> weight : ICKERR; }
+int ickbox_getlength(const ickbox_t* box)
+{ return box -> boxid == 0 ? box -> length : ICKERR; }
 int ickbox_load(ickbox_t* box, cargo_t tar) {
   if (box -> boxid != 0) { return ICKERR; }
   ickbox_t* currbox = box;
@@ -61,6 +65,7 @@ int ickbox_load(ickbox_t* box, cargo_t tar) {
       if (currbox -> boxlink == NULL) 
       { return ICKERR; }
       currbox -> boxlink -> boxid = currpos;
+      box -> length += 1;
     }
     currbox = currbox -> boxlink;
     if (currbox -> boxid != currpos)
@@ -78,14 +83,15 @@ int ickbox_loadat(ickbox_t* box, cargo_t tar, int pos) {
     currpos += 1;
     if (currbox -> boxlink == NULL) {
       currbox -> boxlink = ickbox();
-       if (currbox -> boxlink == NULL)
-       { return ICKERR; }
-       currbox -> boxlink -> boxid = currpos;
+      if (currbox -> boxlink == NULL)
+      { return ICKERR; }
+      currbox -> boxlink -> boxid = currpos;
+      box -> length += 1;
     }
     currbox = currbox -> boxlink;
   }
-  currbox -> cargo = tar;
   box -> weight += 1;
+  currbox -> cargo = tar;
   return ICKSUCCESS;
 }
 cargo_t ickbox_check(ickbox_t* box, int pos) {
@@ -176,7 +182,6 @@ int ickshelf_place(ickshelf_t* shelf, char* label, cargo_t tar) {
   if (shelf -> cargo_label[label_key] == NULL) {
     shelf -> cargo_label[label_key] = label;
     shelf -> shelf_cargo[label_key] = tar;
-    printf("Saved at %d\n", label_key);
     return ICKSUCCESS;
   }
   if (shelf -> cargo_label[label_key] != NULL &&
@@ -189,7 +194,6 @@ int ickshelf_place(ickshelf_t* shelf, char* label, cargo_t tar) {
   } 
   shelf -> shelf_cargo[label_key] = tar;
   shelf -> cargo_label[label_key] = label; }
-  printf("Saved at %d\n", label_key);
   return ICKSUCCESS;
 }
 cargo_t ickshelf_grab(ickshelf_t* shelf, char* label) {
